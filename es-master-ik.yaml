@@ -6,7 +6,7 @@ metadata:
     component: elasticsearch
     role: master
 spec:
-  replicas: 1
+  replicas: 3
   template:
     metadata:
       labels:
@@ -24,7 +24,8 @@ spec:
           privileged: true
       containers:
       - name: es-master
-        image: gjerryfe/web:docker-elasticsearch-6.1.1-ik
+        #image: gjerryfe/web:docker-elasticsearch-6.1.1-ik
+        image: gjerryfe/web:docker-elasticsearch-kubernetes-6.1.1-ik
         env:
         - name: NAMESPACE
           valueFrom:
@@ -37,7 +38,7 @@ spec:
         - name: CLUSTER_NAME
           value: myesdb
         - name: NUMBER_OF_MASTERS
-          value: "1"
+          value: "2"
         - name: NODE_MASTER
           value: "true"
         - name: NODE_INGEST
@@ -50,8 +51,8 @@ spec:
           value: -Xms256m -Xmx256m
         - name: DISCOVERY_SERVICE
           value: "elasticsearch-discovery"
-        - name: NETWORK_HOST
-          value: "_eth0:ipv4_"
+        #- name: NETWORK_HOST
+        #  value: "_eth0:ipv4_"
         ports:
         - containerPort: 9300
           name: transport
