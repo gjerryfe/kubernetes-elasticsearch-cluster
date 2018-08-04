@@ -1,17 +1,17 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: es-data
+  name: es-master
   labels:
     component: elasticsearch
-    role: data
+    role: master
 spec:
   replicas: 1
   template:
     metadata:
       labels:
         component: elasticsearch
-        role: data
+        role: master
     spec:
       initContainers:
       - name: init-sysctl
@@ -23,8 +23,8 @@ spec:
         securityContext:
           privileged: true
       containers:
-      - name: es-data
-        image: quay.io/pires/docker-elasticsearch-kubernetes:6.1.1
+      - name: es-master
+        image: gjerryfe/web:docker-elasticsearch-6.1.1-ik
         env:
         - name: NAMESPACE
           valueFrom:
@@ -36,27 +36,33 @@ spec:
               fieldPath: metadata.name
         - name: CLUSTER_NAME
           value: myesdb
+        - name: NUMBER_OF_MASTERS
+          value: "1"
         - name: NODE_MASTER
-          value: "false"
+          value: "true"
         - name: NODE_INGEST
+          value: "false"
+        - name: NODE_DATA
           value: "false"
         - name: HTTP_ENABLE
           value: "false"
         - name: ES_JAVA_OPTS
           value: -Xms256m -Xmx256m
+        - name: DISCOVERY_SERVICE
+          value: "elasticsearch-discovery"
+        - name: NETWORK_HOST
+          value: "_eth0:ipv4_"
         ports:
         - containerPort: 9300
           name: transport
         livenessProbe:
           tcpSocket:
             port: transport
-          initialDelaySeconds: 20
-          periodSeconds: 10
+          initialDelaySeconds: 60
         volumeMounts:
-        - name: ceph-rbd-volume
+        - name: storage
           mountPath: /data
       volumes:
-          - name: ceph-rbd-volume
-            persistentVolumeClaim:
-              claimName: ceph-pvc
-
+          - emptyDir:
+              medium: ""
+            name: "storage"
